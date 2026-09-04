@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoliChiaro — Account confermato</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --primary: #2f5fd6;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1c2333;
+    --text-muted: #6b7280;
+    --danger: #d3402e;
+    --success: #1e8a4c;
+    --border: #e3e7f0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(30, 41, 80, 0.08);
+    padding: 32px 28px;
+    text-align: center;
+  }
+  .logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .logo-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
+  .logo-text {
+    font-weight: 700; font-size: 15px; letter-spacing: 0.2px;
+    color: var(--text-muted); text-transform: uppercase;
+  }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p.sub { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0; }
+  .icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: white; margin: 0 auto 18px;
+  }
+  .icon.success { background: var(--success); }
+  .icon.error { background: var(--danger); }
+  .msg.error { background: #fdecea; color: var(--danger); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; margin-top: 16px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-row">
+      <div class="logo-dot"></div>
+      <div class="logo-text">PoliChiaro</div>
+    </div>
+    <div id="app">
+      <div class="icon success">✓</div>
+      <h1>Account confermato!</h1>
+      <p class="sub">Ora puoi tornare alla app PoliChiaro e accedere con la tua email e password.</p>
+    </div>
+  </div>
+
+  <script>
+    // Se il link contiene un errore (token scaduto/già usato), Supabase lo
+    // passa come parametro invece che confermare l'account.
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const errorDescription = params.get('error_description') || hashParams.get('error_description');
+
+    if (errorDescription) {
+      document.getElementById('app').innerHTML = `
+        <div class="icon error">!</div>
+        <h1>Link non valido</h1>
+        <p class="sub">Il link di conferma potrebbe essere scaduto o già stato usato.</p>
+        <div class="msg error">${decodeURIComponent(errorDescription.replace(/\+/g, ' '))}</div>
+      `;
+    }
+  </script>
+</body>
+</html>
