@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoliChiaro — Reimposta password</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --primary: #2f5fd6;
+    --primary-dark: #1e3f99;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1c2333;
+    --text-muted: #6b7280;
+    --danger: #d3402e;
+    --success: #1e8a4c;
+    --border: #e3e7f0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(30, 41, 80, 0.08);
+    padding: 32px 28px;
+  }
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .logo-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+  .logo-text {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 8px;
+  }
+  p.sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 24px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  input[type="password"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="password"]:focus {
+    border-color: var(--primary);
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+  button {
+    width: 100%;
+    margin-top: 22px;
+    padding: 13px 14px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  button:hover { background: var(--primary-dark); }
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .msg {
+    font-size: 13.5px;
+    line-height: 1.5;
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-top: 16px;
+  }
+  .msg.error { background: #fdecea; color: var(--danger); }
+  .msg.success { background: #e9f7ef; color: var(--success); }
+  .msg.info { background: #eef2fc; color: var(--primary-dark); }
+  .center-state {
+    text-align: center;
+    padding: 12px 0 4px;
+  }
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    margin: 0 auto 16px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .success-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--success);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 16px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo-row">
+      <div class="logo-dot"></div>
+      <div class="logo-text">PoliChiaro</div>
+    </div>
+
+    <div id="app">
+      <div class="center-state">
+        <div class="spinner"></div>
+        <p class="sub" style="margin:0;">Verifica del link in corso…</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://kzvstnfpwcxaocubegfz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6dnN0bmZwd2N4YW9jdWJlZ2Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0OTg2MTEsImV4cCI6MjA5ODA3NDYxMX0.dOTCRcbfpOA80fy6l0pppyaIsxnoIbK5kaIUBHeDkxM';
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        // Qui, a differenza dell'app React Native, VOGLIAMO che la libreria
+        // legga da sola i token dall'URL: è esattamente il compito di questa
+        // pagina (fare da "ponte" per il link che arriva dalla mail).
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
+
+    const app = document.getElementById('app');
+
+    function renderErrore(messaggio) {
+      app.innerHTML = `
+        <h1>Link non valido</h1>
+        <div class="msg error">${messaggio}</div>
+        <p class="sub" style="margin-top:16px;">
+          Torna alla app PoliChiaro e richiedi un nuovo link dalla schermata "Password dimenticata".
+        </p>
+      `;
+    }
+
+    function renderNessunLink() {
+      app.innerHTML = `
+        <h1>Reimposta password</h1>
+        <p class="sub">
+          Questa pagina serve a completare il reset della password avviato dall'app PoliChiaro.
+          Apri il link ricevuto via email per continuare.
+        </p>
+      `;
+    }
+
+    function renderForm() {
+      app.innerHTML = `
+        <h1>Scegli una nuova password</h1>
+        <p class="sub">La userai per accedere all'app PoliChiaro d'ora in poi.</p>
+        <form id="form-reset">
+          <label for="pw1">Nuova password</label>
+          <input type="password" id="pw1" autocomplete="new-password" placeholder="Almeno 8 caratteri" required />
+          <label for="pw2">Conferma password</label>
+          <input type="password" id="pw2" autocomplete="new-password" placeholder="Ripeti la password" required />
+          <div class="hint">Minimo 8 caratteri.</div>
+          <div id="form-msg"></div>
+          <button type="submit" id="btn-submit">Salva nuova password</button>
+        </form>
+      `;
+
+      const form = document.getElementById('form-reset');
+      const msgBox = document.getElementById('form-msg');
+      const btn = document.getElementById('btn-submit');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msgBox.innerHTML = '';
+
+        const pw1 = document.getElementById('pw1').value;
+        const pw2 = document.getElementById('pw2').value;
+
+        if (pw1.length < 8) {
+          msgBox.innerHTML = '<div class="msg error">La password deve avere almeno 8 caratteri.</div>';
+          return;
+        }
+        if (pw1 !== pw2) {
+          msgBox.innerHTML = '<div class="msg error">Le due password non coincidono.</div>';
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Salvataggio…';
+
+        const { error } = await client.auth.updateUser({ password: pw1 });
+
+        if (error) {
+          btn.disabled = false;
+          btn.textContent = 'Salva nuova password';
+          msgBox.innerHTML = `<div class="msg error">${error.message || 'Non è stato possibile salvare la password. Riprova.'}</div>`;
+          return;
+        }
+
+        renderSuccesso();
+      });
+    }
+
+    function renderSuccesso() {
+      app.innerHTML = `
+        <div class="center-state">
+          <div class="success-icon">✓</div>
+          <h1 style="margin-bottom:8px;">Password aggiornata!</h1>
+          <p class="sub">
+            Ora puoi tornare alla app PoliChiaro e accedere con la tua nuova password.
+          </p>
+        </div>
+      `;
+    }
+
+    async function init() {
+      // Se il link contiene un errore (es. scaduto o già usato), Supabase
+      // lo passa come parametro nell'URL invece che come sessione valida.
+      const params = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const errorDescription = params.get('error_description') || hashParams.get('error_description');
+
+      if (errorDescription) {
+        renderErrore(decodeURIComponent(errorDescription.replace(/\+/g, ' ')));
+        return;
+      }
+
+      // Ha senso mostrare il form solo se questa pagina è stata aperta
+      // davvero tramite un link di recupero (non se qualcuno la visita
+      // direttamente, senza token nell'URL).
+      const haQualcosaDaProcessare =
+        params.get('code') || hashParams.get('access_token') || hashParams.get('type') === 'recovery';
+
+      if (!haQualcosaDaProcessare) {
+        renderNessunLink();
+        return;
+      }
+
+      // Diamo a supabase-js il tempo di processare l'URL (detectSessionInUrl)
+      // e intercettiamo l'evento PASSWORD_RECOVERY quando scatta.
+      let gestito = false;
+
+      client.auth.onAuthStateChange((event, session) => {
+        if (gestito) return;
+        if (event === 'PASSWORD_RECOVERY' && session) {
+          gestito = true;
+          renderForm();
+        }
+      });
+
+      // Fallback: se l'evento non scatta ma una sessione risulta comunque
+      // stabilita entro un paio di secondi, mostriamo comunque il form.
+      setTimeout(async () => {
+        if (gestito) return;
+        const { data } = await client.auth.getSession();
+        if (data?.session) {
+          gestito = true;
+          renderForm();
+        } else {
+          renderErrore('Il link non è più valido: potrebbe essere scaduto o già stato usato. Richiedine uno nuovo dall\'app.');
+        }
+      }, 2500);
+    }
+
+    init();
+  </script>
+</body>
+</html>
