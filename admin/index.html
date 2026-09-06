@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoliChiaro — Pannello Supporto</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --primary: #2f5fd6;
+    --primary-dark: #1e3f99;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1c2333;
+    --text-muted: #6b7280;
+    --danger: #d3402e;
+    --success: #1e8a4c;
+    --border: #e3e7f0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+
+  /* ---------- Login ---------- */
+  .login-wrap {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .login-card {
+    width: 100%; max-width: 380px; background: var(--card); border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(30,41,80,0.08); padding: 32px 28px;
+  }
+  .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .logo-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
+  .logo-text { font-weight: 700; font-size: 13px; letter-spacing: 0.3px; color: var(--text-muted); text-transform: uppercase; }
+  h1 { font-size: 19px; margin: 0 0 18px; }
+  label { display: block; font-size: 12.5px; font-weight: 600; margin: 14px 0 6px; }
+  input[type="email"], input[type="password"] {
+    width: 100%; padding: 11px 13px; border-radius: 10px; border: 1.5px solid var(--border);
+    font-size: 14.5px; outline: none;
+  }
+  input:focus { border-color: var(--primary); }
+  button {
+    border: none; border-radius: 10px; background: var(--primary); color: white;
+    font-size: 14.5px; font-weight: 700; cursor: pointer; padding: 12px 16px;
+  }
+  button:hover { background: var(--primary-dark); }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-full { width: 100%; margin-top: 18px; }
+  .msg-error { background: #fdecea; color: var(--danger); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-top: 14px; }
+
+  /* ---------- Dashboard ---------- */
+  .dash { display: none; height: 100vh; }
+  .dash.visible { display: flex; }
+
+  .sidebar {
+    width: 300px; flex-shrink: 0; background: var(--card); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sidebar-title { font-weight: 700; font-size: 14px; }
+  .logout-btn { background: none; color: var(--text-muted); font-weight: 600; font-size: 12.5px; padding: 6px 8px; }
+  .logout-btn:hover { background: var(--bg); }
+  .conv-list { flex: 1; overflow-y: auto; }
+  .conv-item {
+    padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .conv-item:hover { background: var(--bg); }
+  .conv-item.active { background: #eef2fc; }
+  .conv-nome { font-weight: 700; font-size: 13.5px; margin-bottom: 3px; }
+  .conv-oggetto { font-size: 12.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conv-meta { font-size: 11px; color: #9aa1b2; margin-top: 4px; }
+  .badge-chiusa { display: inline-block; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--bg); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .main-header { padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--card); }
+  .main-header-nome { font-weight: 700; font-size: 15px; }
+  .main-header-oggetto { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .main-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px; }
+
+  .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .bubble-row { display: flex; }
+  .bubble-row.staff { justify-content: flex-end; }
+  .bubble-row.utente { justify-content: flex-start; }
+  .bubble { max-width: 60%; border-radius: 16px; padding: 10px 14px; font-size: 14px; line-height: 1.45; }
+  .bubble.staff { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+  .bubble.utente { background: var(--bg); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .bubble-time { font-size: 10px; opacity: 0.7; margin-top: 4px; }
+
+  .composer { display: flex; gap: 10px; padding: 14px; border-top: 1px solid var(--border); background: var(--card); }
+  .composer textarea {
+    flex: 1; resize: none; border-radius: 14px; border: 1.5px solid var(--border);
+    padding: 10px 14px; font-size: 14px; font-family: inherit; max-height: 100px;
+  }
+  .composer textarea:focus { outline: none; border-color: var(--primary); }
+  .composer button { border-radius: 14px; padding: 0 18px; }
+</style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div class="login-wrap" id="login-wrap">
+    <div class="login-card">
+      <div class="logo-row"><div class="logo-dot"></div><div class="logo-text">PoliChiaro — Supporto</div></div>
+      <h1>Accedi</h1>
+      <form id="form-login">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" required autocomplete="username" />
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" required autocomplete="current-password" />
+        <button type="submit" class="btn-full" id="btn-login">Accedi</button>
+        <div id="login-error"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dash" id="dash">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Conversazioni</div>
+        <button class="logout-btn" id="btn-logout">Esci</button>
+      </div>
+      <div class="conv-list" id="conv-list"></div>
+    </div>
+    <div class="main">
+      <div id="main-header-wrap" style="display:none;">
+        <div class="main-header">
+          <div class="main-header-nome" id="main-nome"></div>
+          <div class="main-header-oggetto" id="main-oggetto"></div>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="composer">
+          <textarea id="composer-input" placeholder="Scrivi una risposta..." rows="1"></textarea>
+          <button id="btn-invia">Invia</button>
+        </div>
+      </div>
+      <div class="main-empty" id="main-empty">Seleziona una conversazione dalla lista</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://kzvstnfpwcxaocubegfz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6dnN0bmZwd2N4YW9jdWJlZ2Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0OTg2MTEsImV4cCI6MjA5ODA3NDYxMX0.dOTCRcbfpOA80fy6l0pppyaIsxnoIbK5kaIUBHeDkxM';
+    const ADMIN_EMAIL = 'polichiaro@gmail.com';
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    });
+
+    const loginWrap = document.getElementById('login-wrap');
+    const dash = document.getElementById('dash');
+    const convList = document.getElementById('conv-list');
+    const mainHeaderWrap = document.getElementById('main-header-wrap');
+    const mainEmpty = document.getElementById('main-empty');
+    const mainNome = document.getElementById('main-nome');
+    const mainOggetto = document.getElementById('main-oggetto');
+    const messagesEl = document.getElementById('messages');
+    const composerInput = document.getElementById('composer-input');
+
+    let conversazioneAttiva = null;
+    let conversazioni = [];
+    let canaleMessaggi = null;
+
+    function formatOra(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    // ---------- Login ----------
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('btn-login');
+      const errBox = document.getElementById('login-error');
+      errBox.innerHTML = '';
+      btn.disabled = true;
+      btn.textContent = 'Accesso...';
+
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+
+      if (error || !data?.session) {
+        btn.disabled = false;
+        btn.textContent = 'Accedi';
+        errBox.innerHTML = `<div class="msg-error">${error?.message || 'Credenziali non valide.'}</div>`;
+        return;
+      }
+      if (data.session.user.email !== ADMIN_EMAIL) {
+        await client.auth.signOut();
+        btn.disabled = false;
+        btn.textContent = 'Accedi';
+        errBox.innerHTML = `<div class="msg-error">Questo account non ha accesso al pannello.</div>`;
+        return;
+      }
+      avviaDashboard();
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await client.auth.signOut();
+      window.location.reload();
+    });
+
+    // ---------- Dashboard ----------
+    async function avviaDashboard() {
+      loginWrap.style.display = 'none';
+      dash.classList.add('visible');
+      await caricaConversazioni();
+      sottoscriviRealtime();
+    }
+
+    async function caricaConversazioni() {
+      const { data, error } = await client
+        .from('conversazioni_supporto')
+        .select('id, oggetto, stato, created_at, updated_at, profili(username)')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        convList.innerHTML = `<div style="padding:16px;color:var(--danger);font-size:13px;">${error.message}</div>`;
+        return;
+      }
+      conversazioni = data || [];
+      renderConvList();
+    }
+
+    function renderConvList() {
+      convList.innerHTML = '';
+      conversazioni.forEach(conv => {
+        const item = document.createElement('div');
+        item.className = 'conv-item' + (conv.id === conversazioneAttiva ? ' active' : '');
+        item.innerHTML = `
+          <div class="conv-nome">${conv.profili?.username || 'Utente'}${conv.stato === 'chiusa' ? '<span class="badge-chiusa">chiusa</span>' : ''}</div>
+          <div class="conv-oggetto">${escapeHtml(conv.oggetto)}</div>
+          <div class="conv-meta">${formatOra(conv.updated_at || conv.created_at)}</div>
+        `;
+        item.addEventListener('click', () => selezionaConversazione(conv.id));
+        convList.appendChild(item);
+      });
+    }
+
+    async function selezionaConversazione(id) {
+      conversazioneAttiva = id;
+      renderConvList();
+
+      const conv = conversazioni.find(c => c.id === id);
+      mainHeaderWrap.style.display = 'flex';
+      mainHeaderWrap.style.flexDirection = 'column';
+      mainHeaderWrap.style.flex = '1';
+      mainHeaderWrap.style.minHeight = '0';
+      mainEmpty.style.display = 'none';
+      mainNome.textContent = conv?.profili?.username || 'Utente';
+      mainOggetto.textContent = conv?.oggetto || '';
+
+      const { data, error } = await client
+        .from('messaggi_supporto')
+        .select('*')
+        .eq('conversazione_id', id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        messagesEl.innerHTML = `<div style="color:var(--danger);font-size:13px;">${error.message}</div>`;
+        return;
+      }
+      renderMessaggi(data || []);
+    }
+
+    function renderMessaggi(msgs) {
+      messagesEl.innerHTML = '';
+      msgs.forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'bubble-row ' + m.mittente;
+        row.innerHTML = `
+          <div class="bubble ${m.mittente}">
+            <div>${escapeHtml(m.testo)}</div>
+            <div class="bubble-time">${formatOra(m.created_at)}</div>
+          </div>
+        `;
+        messagesEl.appendChild(row);
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function inviaRisposta() {
+      const testo = composerInput.value.trim();
+      if (!testo || !conversazioneAttiva) return;
+      composerInput.value = '';
+
+      const { error } = await client.from('messaggi_supporto').insert({
+        conversazione_id: conversazioneAttiva,
+        mittente: 'staff',
+        testo,
+      });
+      if (error) {
+        alert('Errore invio: ' + error.message);
+        return;
+      }
+      await client.from('conversazioni_supporto').update({ updated_at: new Date().toISOString() }).eq('id', conversazioneAttiva);
+    }
+
+    document.getElementById('btn-invia').addEventListener('click', inviaRisposta);
+    composerInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        inviaRisposta();
+      }
+    });
+
+    // ---------- Realtime ----------
+    function sottoscriviRealtime() {
+      if (canaleMessaggi) client.removeChannel(canaleMessaggi);
+
+      canaleMessaggi = client
+        .channel('admin-messaggi-supporto')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messaggi_supporto' }, (payload) => {
+          // Se il messaggio appartiene alla conversazione aperta, aggiungilo subito
+          if (payload.new.conversazione_id === conversazioneAttiva) {
+            const conv = conversazioni.find(c => c.id === conversazioneAttiva);
+            if (conv) selezionaConversazioneSilenziosa(conversazioneAttiva);
+          }
+          caricaConversazioni(); // aggiorna comunque la sidebar (ordine/badge)
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversazioni_supporto' }, () => {
+          caricaConversazioni();
+        })
+        .subscribe();
+    }
+
+    // Ricarica i messaggi della conversazione attiva senza toccare
+    // l'header (evita flicker quando arriva un nuovo messaggio in tempo reale)
+    async function selezionaConversazioneSilenziosa(id) {
+      const { data } = await client
+        .from('messaggi_supporto')
+        .select('*')
+        .eq('conversazione_id', id)
+        .order('created_at', { ascending: true });
+      renderMessaggi(data || []);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    // ---------- Avvio: c'è già una sessione valida? ----------
+    (async () => {
+      const { data } = await client.auth.getSession();
+      if (data?.session?.user?.email === ADMIN_EMAIL) {
+        avviaDashboard();
+      }
+    })();
+  </script>
+</body>
+</html>
