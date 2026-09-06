@@ -318,16 +318,46 @@
       if (!testo || !conversazioneAttiva) return;
       composerInput.value = '';
 
-      const { error } = await client.from('messaggi_supporto').insert({
+      const nuovoMessaggio = {
         conversazione_id: conversazioneAttiva,
         mittente: 'staff',
         testo,
-      });
+      };
+
+      const { data, error } = await client
+        .from('messaggi_supporto')
+        .insert(nuovoMessaggio)
+        .select()
+        .single();
+
       if (error) {
         alert('Errore invio: ' + error.message);
+        composerInput.value = testo; // ridai indietro il testo
         return;
       }
+
+      // Mostra subito la tua risposta, senza aspettare realtime o il
+      // prossimo giro di polling (fino a 4s dopo) — prima non veniva
+      // mostrata finché non si ricaricava la pagina a mano.
+      appendMessaggioSeAttivo(data);
+
       await client.from('conversazioni_supporto').update({ updated_at: new Date().toISOString() }).eq('id', conversazioneAttiva);
+      caricaConversazioni();
+    }
+
+    function appendMessaggioSeAttivo(msg) {
+      if (msg.conversazione_id !== conversazioneAttiva) return;
+      const row = document.createElement('div');
+      row.className = 'bubble-row ' + msg.mittente;
+      row.innerHTML = `
+        <div class="bubble ${msg.mittente}">
+          <div>${escapeHtml(msg.testo)}</div>
+          <div class="bubble-time">${formatOra(msg.created_at)}</div>
+        </div>
+      `;
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      ultimoConteggioMessaggi += 1;
     }
 
     document.getElementById('btn-invia').addEventListener('click', inviaRisposta);
