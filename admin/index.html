@@ -167,6 +167,8 @@
     let conversazioneAttiva = null;
     let conversazioni = [];
     let canaleMessaggi = null;
+    let ultimoConteggioMessaggi = 0;
+    let pollingInterval = null;
 
     function formatOra(iso) {
       const d = new Date(iso);
@@ -213,6 +215,30 @@
       dash.classList.add('visible');
       await caricaConversazioni();
       sottoscriviRealtime();
+      avviaPolling();
+    }
+
+    // Aggiornamento automatico leggero: il realtime su policy RLS
+    // personalizzate (come il controllo email admin) non sempre si
+    // propaga in modo affidabile lato Supabase — questo garantisce che
+    // il pannello si aggiorni comunque, senza dover ricaricare a mano.
+    function avviaPolling() {
+      if (pollingInterval) clearInterval(pollingInterval);
+      pollingInterval = setInterval(async () => {
+        await caricaConversazioni();
+        if (conversazioneAttiva) {
+          const { data } = await client
+            .from('messaggi_supporto')
+            .select('*')
+            .eq('conversazione_id', conversazioneAttiva)
+            .order('created_at', { ascending: true });
+          const msgs = data || [];
+          if (msgs.length !== ultimoConteggioMessaggi) {
+            ultimoConteggioMessaggi = msgs.length;
+            renderMessaggi(msgs);
+          }
+        }
+      }, 4000);
     }
 
     async function caricaConversazioni() {
@@ -268,6 +294,7 @@
         return;
       }
       renderMessaggi(data || []);
+      ultimoConteggioMessaggi = (data || []).length;
     }
 
     function renderMessaggi(msgs) {
